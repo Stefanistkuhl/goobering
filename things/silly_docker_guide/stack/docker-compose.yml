@@ -1,0 +1,20 @@
+services:
+  backend:
+    image: 127.0.0.1:5000/swarm-backend:latest
+    build: 
+      context:
+        ./backend
+    deploy:
+      replicas: 3
+
+  frontend:
+    image: 127.0.0.1:5000/swarm-frontend:latest
+    build:
+      context:
+        ./nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    deploy:
+      replicas: 2

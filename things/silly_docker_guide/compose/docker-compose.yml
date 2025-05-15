@@ -1,0 +1,16 @@
+services:
+  backend:
+    image: backend:latest
+    build: 
+      context:
+        ./backend
+
+  frontend:
+    image: frontend:latest
+    build:
+      context:
+        ./nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend

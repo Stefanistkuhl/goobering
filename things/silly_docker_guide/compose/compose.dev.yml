@@ -1,0 +1,10 @@
+services:
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/frontend/index.html:/usr/share/nginx/html/index.html
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf:ro
+    depends_on:
+      - backend
