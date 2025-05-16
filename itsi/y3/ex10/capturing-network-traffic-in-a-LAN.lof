@@ -1,0 +1,17 @@
+\contentsline {figure}{\numberline {1}{\ignorespaces Grouplogo}}{1}{figure.1}%
+\contentsline {figure}{\numberline {2}{\ignorespaces Complete network topology of the exercise using a switch}}{4}{figure.2}%
+\contentsline {figure}{\numberline {3}{\ignorespaces Complete network topology of the exercise using a Hub}}{4}{figure.3}%
+\contentsline {figure}{\numberline {4}{\ignorespaces Connecting to the Router via \texttt {Winbox}}}{5}{figure.4}%
+\contentsline {figure}{\numberline {5}{\ignorespaces Examining the traffic mirror configuration}}{6}{figure.5}%
+\contentsline {figure}{\numberline {6}{\ignorespaces Examining the \texttt {arp} traffic without a mirror configuration}}{7}{figure.6}%
+\contentsline {figure}{\numberline {7}{\ignorespaces Examining the \texttt {arp} traffic with a mirror configuration}}{7}{figure.7}%
+\contentsline {figure}{\numberline {8}{\ignorespaces Displaying the pings to every device on the Network}}{8}{figure.8}%
+\contentsline {figure}{\numberline {9}{\ignorespaces Displaying the full ping between the attacker and a client}}{8}{figure.9}%
+\contentsline {figure}{\numberline {10}{\ignorespaces Observing a Ping Between Two Clients That Don't Involve the Attacker}}{9}{figure.10}%
+\contentsline {figure}{\numberline {11}{\ignorespaces Viewing the plain text password from the authentication}}{10}{figure.11}%
+\contentsline {figure}{\numberline {12}{\ignorespaces Viewing the correct plain text password from the authentication}}{10}{figure.12}%
+\contentsline {figure}{\numberline {13}{\ignorespaces Viewing the returned \texttt {HTML}}}{11}{figure.13}%
+\contentsline {figure}{\numberline {14}{\ignorespaces Viewing the \texttt {VoIP} menu in Wireshark}}{12}{figure.14}%
+\contentsline {figure}{\numberline {15}{\ignorespaces Viewing the Waveform of the call}}{12}{figure.15}%
+\contentsline {figure}{\numberline {16}{\ignorespaces Fixing the Audio Levels in Audacity}}{13}{figure.16}%
+\contentsline {figure}{\numberline {17}{\ignorespaces Removing Background Noise Using Adobe's Podcast Tool}}{13}{figure.17}%

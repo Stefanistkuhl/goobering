@@ -1,0 +1,13 @@
+\contentsline {section}{\numberline {1}Task definition}{3}{section.1}%
+\contentsline {section}{\numberline {2}Summary}{3}{section.2}%
+\contentsline {section}{\numberline {3}Complete network topology of the exercise}{4}{section.3}%
+\contentsline {section}{\numberline {4}Exercise Execution}{5}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Building the Topologies}{5}{subsection.4.1}%
+\contentsline {subsubsection}{\numberline {4.1.1}Mirroring traffic in \texttt {RouterOS v7}}{5}{subsubsection.4.1.1}%
+\contentsline {subsubsection}{\numberline {4.1.2}Comparing the traffic before and after the configuarion}{7}{subsubsection.4.1.2}%
+\contentsline {subsection}{\numberline {4.2}Packet Sniffing on the Local Device}{8}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Capturing a Ping Between Two Targets}{9}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Capturing Plain Text Passwords}{10}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Capturing a VoIP Call}{11}{subsection.4.5}%
+\contentsline {section}{\numberline {5}References}{14}{section.5}%
+\contentsline {section}{\numberline {6}List of figures}{15}{section.6}%
