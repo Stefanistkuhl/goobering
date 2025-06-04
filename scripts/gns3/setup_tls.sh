@@ -7,8 +7,11 @@ if [ "$EUID" -ne 0 ] && ! sudo -n true &>/dev/null; then
   exit 1
 fi
 
+# If not root, use sudo (we know it’s passwordless)
 SUDO=""
-[ "$EUID" -ne 0 ] && SUDO="sudo"
+if [ "$EUID" -ne 0 ]; then
+  SUDO="sudo"
+fi
 
 # make apt non-interactive
 export DEBIAN_FRONTEND=noninteractive
