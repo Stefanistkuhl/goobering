@@ -1,50 +1,96 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 1) require root or passwordless sudo
+# Require root or passwordless sudo
 if [ "$EUID" -ne 0 ] && ! sudo -n true &>/dev/null; then
   echo "Error: must be root or have passwordless sudo" >&2
   exit 1
 fi
-
-# If not root, use sudo (we know it’s passwordless)
 SUDO=""
 if [ "$EUID" -ne 0 ]; then
   SUDO="sudo"
 fi
 
-# make apt non-interactive
-export DEBIAN_FRONTEND=noninteractive
+# Bail if Caddy already installed
+if command -v caddy &>/dev/null; then
+  echo "Caddy already installed: $(caddy version)"
+  exit 0
+fi
 
-# cert subject
+# Load OS info
+. /etc/os-release
+
+install_debian() {
+  echo "Installing Caddy on Debian/Ubuntu/Raspbian..."
+  $SUDO apt-get update -qq
+  $SUDO apt-get install -y \
+    debian-keyring debian-archive-keyring \
+    apt-transport-https curl gnupg
+  
+  curl -1sLf \
+    'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
+    | $SUDO gpg --dearmor \
+      -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+
+  curl -1sLf \
+    'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
+    | $SUDO tee /etc/apt/sources.list.d/caddy-stable.list \
+      >/dev/null
+
+  $SUDO apt-get update -qq
+  $SUDO apt-get install -y caddy
+}
+
+install_fedora_rhel() {
+  if command -v dnf &>/dev/null; then
+    echo "Installing Caddy via COPR (dnf)..."
+    $SUDO dnf install -y 'dnf-command(copr)'
+    $SUDO dnf copr enable -y @caddy/caddy
+    $SUDO dnf install -y caddy
+  elif command -v yum &>/dev/null; then
+    echo "Installing Caddy via COPR (yum)..."
+    $SUDO yum install -y yum-plugin-copr
+    $SUDO yum copr enable @caddy/caddy
+    $SUDO yum install -y caddy
+  else
+    echo "Error: no dnf or yum found" >&2
+    exit 1
+  fi
+}
+
+install_arch() {
+  echo "Installing Caddy on Arch/Manjaro..."
+  $SUDO pacman -Sy --noconfirm caddy
+}
+
+install_caddy() {
+  case "$ID" in
+    debian|ubuntu|raspbian)
+      install_debian
+      ;;
+    fedora|centos|rhel)
+      install_fedora_rhel
+      ;;
+    arch|manjaro)
+      install_arch
+      ;;
+    *)
+      echo "Unsupported distro: $ID. Install Caddy manually." >&2
+      exit 1
+      ;;
+  esac
+}
+
+install_caddy
+
+# Enable & start the service
+$SUDO systemctl enable --now caddy
+
+# Certificate subject
 SUBJ='/C=AT/ST=Vienna/L=Vienna/O=HTL-Donaustadt/OU=3AHITN\
 /CN=nwt-lab/emailAddress=jx62vdws6@mozmail.com'
 
-# 2) install deps
-$SUDO apt-get update -qq
-$SUDO apt-get install -y -q \
-  -o Dpkg::Options::="--force-confdef" \
-  -o Dpkg::Options::="--force-confold" \
-  debian-keyring debian-archive-keyring \
-  apt-transport-https curl gnupg
-
-# 3) remove any stale keyring, then import Caddy’s GPG key
-KEYRING=/usr/share/keyrings/caddy-stable-archive-keyring.gpg
-$SUDO rm -f "$KEYRING"
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
-  | gpg --batch --dearmor \
-    -o /tmp/caddy.gpg
-$SUDO mv /tmp/caddy.gpg "$KEYRING"
-
-# 4) add repo
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
-  | $SUDO tee /etc/apt/sources.list.d/caddy-stable.list >/dev/null
-
-# 5) install Caddy
-$SUDO apt-get update -qq
-$SUDO apt-get install -y -q caddy
-
-# 6) generate cert
+# Generate a self-signed cert
 CERT_DIR=/etc/caddy/certs
 $SUDO mkdir -p "$CERT_DIR"
 $SUDO openssl req -new -x509 -days 365 -nodes \
@@ -53,7 +99,7 @@ $SUDO openssl req -new -x509 -days 365 -nodes \
   -subj "$SUBJ"
 $SUDO chown -R caddy:caddy "$CERT_DIR"
 
-# 7) write Caddyfile
+# Write Caddyfile
 $SUDO tee /etc/caddy/Caddyfile >/dev/null <<EOF
 :443 {
     reverse_proxy 127.0.0.1:3080
@@ -61,11 +107,10 @@ $SUDO tee /etc/caddy/Caddyfile >/dev/null <<EOF
 }
 EOF
 
-# 8) enable & start Caddy
-$SUDO systemctl enable caddy
-$SUDO systemctl restart caddy
+# Reload Caddy to pick up new config
+$SUDO systemctl reload caddy
 
-# 9) create renew script
+# Create renewal script
 RENEW=/usr/local/bin/renew-caddy-gns3-cert.sh
 $SUDO tee "$RENEW" >/dev/null <<'EOL'
 #!/usr/bin/env bash
@@ -74,17 +119,18 @@ CERT_DIR=/etc/caddy/certs
 openssl req -new -x509 -days 365 -nodes \
   -out "$CERT_DIR/gns3.cert" \
   -keyout "$CERT_DIR/gns3.key" \
-  -subj '\'''"$SUBJ"'\'''
+  -subj '$SUBJ'
 chown caddy:caddy "$CERT_DIR/gns3.cert" "$CERT_DIR/gns3.key"
 systemctl reload caddy
 EOL
 $SUDO chmod +x "$RENEW"
 
-# 10) schedule cron renewal
+# Schedule cron renewal
 CRON_DAY=$(date +%-d)
 CRON_MONTH=$(date -d '+364 days' +%-m)
 CRON_JOB="0 0 $CRON_DAY $CRON_MONTH * /bin/bash $RENEW"
-( $SUDO crontab -l 2>/dev/null; echo "$CRON_JOB" ) | $SUDO crontab -
+( $SUDO crontab -l 2>/dev/null; echo "$CRON_JOB" ) \
+  | $SUDO crontab -
 
 echo "Caddy installed, cert generated, cron job added:"
 echo "   $CRON_JOB"
