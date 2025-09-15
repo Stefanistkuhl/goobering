@@ -87,8 +87,6 @@ Submission date:
   ]
 )
 
-= Task definition <sec:task-definition>
-
 = Summary <sec:summary> 
 
 #pagebreak()
