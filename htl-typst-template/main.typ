@@ -9,6 +9,7 @@
 #let teacher-two = ", TEACHER 2"
 #let student-one = "STUDENT NAME 1"
 #let student-two = "STUDENT NAME 2"
+#let student-three = "STUDENT NAME 2"
 #let group-name = "GROUPNAME"
 #let group-number = "GROUP NUMBER"
 
@@ -64,8 +65,8 @@ Laboratory protocol Excercise #exercise-number: #topic
 #v(1fr)
 Subject: #subject \
 Class: #class-name \
-Name: #student-one, #student-two \
-Gruppenname/Nummer: #group-name /#group-number \
+Name: #student-one, #student-two, #student-three \
+Groupname/Number: #group-name /#group-number \
 Supervisor: #teacher #teacher-two \
 Exercise dates: \
 Submission date:
