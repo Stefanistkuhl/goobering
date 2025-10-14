@@ -5,11 +5,8 @@
 
 #let subject = "SUBJECT"
 #let class-name = "CLASS"
-#let teacher = "TEACHER 1"
-#let teacher-two = ", TEACHER 2"
-#let student-one = "STUDENT NAME 1"
-#let student-two = "STUDENT NAME 2"
-#let student-three = "STUDENT NAME 2"
+#let teachers = ("TEACHER 1", "TEACHER 2")
+#let students = ("STUDENT NAME 1", "STUDENT NAME 2", "STUDENT NAME 3")
 #let group-name = "GROUPNAME"
 #let group-number = "GROUP NUMBER"
 
@@ -65,9 +62,9 @@ Laboratory protocol Excercise #exercise-number: #topic
 #v(1fr)
 Subject: #subject \
 Class: #class-name \
-Name: #student-one, #student-two, #student-three \
+Names: #students.join(", ") \
 Groupname/Number: #group-name /#group-number \
-Supervisor: #teacher #teacher-two \
+Supervisor: #teachers.join(", ") \
 Exercise dates: \
 Submission date:
 
