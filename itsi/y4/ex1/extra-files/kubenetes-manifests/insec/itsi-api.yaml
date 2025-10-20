@@ -1,0 +1,83 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: itsi-api-hpa
+  namespace: itsi-ex1-insec
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: itsi-api
+  minReplicas: 3
+  maxReplicas: 25
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 50
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: itsi-api
+  namespace: itsi-ex1-insec
+  labels:
+    app: itsi-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: itsi-api
+  template:
+    metadata:
+      labels:
+        app: itsi-api
+    spec:
+      containers:
+        - name: ex1-itsi-api
+          image: ghcr.io/stefanistkuhl/ex1-itsi-api-insec:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8085
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1500Mi"
+          env:
+            - name: PORT
+              value: "8085"
+            - name: RATE_LIMIT_RPS
+              value: "10"
+            - name: GIN_MODE
+              value: debug
+            - name: DB_URL
+              value: "postgres://postgres:postgres@100.67.124.69:5433/someApp?sslmode=disable"
+            - name: AUTH_JWT_SECRET
+              value: "hb7l90YhLEEtGCxWWJcMWXH+MTbxWu/aUrCuysjpUdU87c5hZnzmsWG01pb+b9rRRXrTPK+14jdNcdXcyHBvow==t"
+      imagePullSecrets:
+        - name: multi-registry-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: itsi-api-service
+  namespace: itsi-ex1-insec
+spec:
+  selector:
+    app: itsi-api
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8085
+      targetPort: 8085

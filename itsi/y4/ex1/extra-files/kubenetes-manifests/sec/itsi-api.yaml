@@ -1,0 +1,89 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: itsi-api-hpa
+  namespace: itsi-ex1
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: itsi-api
+  minReplicas: 3
+  maxReplicas: 25
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 50
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: itsi-api
+  namespace: itsi-ex1
+  labels:
+    app: itsi-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: itsi-api
+  template:
+    metadata:
+      labels:
+        app: itsi-api
+    spec:
+      containers:
+        - name: ex1-itsi-api
+          image: ghcr.io/stefanistkuhl/ex1-itsi-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8085
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1500Mi"
+          env:
+            - name: PORT
+              value: "8085"
+            - name: RATE_LIMIT_RPS
+              value: "69"
+            - name: GIN_MODE
+              value: release
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-url
+                  key: TOKEN
+            - name: AUTH_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-token
+                  key: TOKEN
+      imagePullSecrets:
+        - name: multi-registry-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: itsi-api-service
+  namespace: itsi-ex1
+spec:
+  selector:
+    app: itsi-api
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8085
+      targetPort: 8085

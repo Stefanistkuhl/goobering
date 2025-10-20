@@ -1,0 +1,25 @@
+#!/sbin/openrc-run
+
+description="Run Docker PostgreSQL backup job (encrypts dump)"
+
+command="/usr/local/bin/pg_docker_backup.sh"
+command_user="fus-admin"
+command_env="HOME=/home/fus-admin"
+
+depend() {
+    need docker net localmount
+}
+
+start_pre() {
+    if [ ! -d /mnt/backups/app ]; then
+        eerror "Backup path /mnt/backups/app not mounted"
+        return 1
+    fi
+}
+
+start() {
+    ebegin "Executing PostgreSQL backup script"
+    $command
+    local rc=$?
+    [ "$rc" -eq 0 ] && eend 0 "Backup finished successfully" || eend $rc "Backup failed"
+}

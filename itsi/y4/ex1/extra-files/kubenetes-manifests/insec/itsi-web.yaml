@@ -1,0 +1,120 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: itsi-web-hpa
+  namespace: itsi-ex1-insec
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: itsi-web
+  minReplicas: 2
+  maxReplicas: 25
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 50
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: itsi-web
+  namespace: itsi-ex1-insec
+  labels:
+    app: itsi-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: itsi-web
+  template:
+    metadata:
+      labels:
+        app: itsi-web
+    spec:
+      containers:
+        - name: caddy
+          image: ghcr.io/stefanistkuhl/ex1-itsi-web:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1500Mi"
+          volumeMounts:
+            - name: caddyfile
+              mountPath: /etc/caddy/Caddyfile
+              subPath: Caddyfile
+            - name: caddy-ca
+              mountPath: /data/caddy/pki/authorities/local
+      imagePullSecrets:
+        - name: multi-registry-secret
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "128Mi"
+        limits:
+          cpu: "1000m"
+          memory: "1500Mi"
+      volumes:
+        - name: caddyfile
+          configMap:
+            name: itsi-web-config
+        - name: caddy-ca
+          secret:
+            secretName: itsi-caddy-ca
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: itsi-web-config
+  namespace: itsi-ex1-insec
+data:
+  Caddyfile: |
+    https://itsi-ex1-insec-itsi-web-service.tail112d0c.ts.net {
+      tls /data/caddy/pki/authorities/local/ca.crt /data/caddy/pki/authorities/local/ca.key
+      handle_path /api/* {
+        reverse_proxy itsi-api-service:8085
+      }
+
+     root * /srv
+     encode gzip zstd
+
+     handle_path /files/* {
+       root * /etc
+       file_server browse {
+         index off
+       }
+     }
+
+     file_server browse
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: itsi-web-service
+  namespace: itsi-ex1-insec
+spec:
+  selector:
+    app: itsi-web
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  ports:
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 443

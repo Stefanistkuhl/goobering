@@ -1,0 +1,24 @@
+services:
+  db:
+    image: ghcr.io/fboulnois/pg_uuidv7
+    environment:
+      POSTGRES_DB: someApp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+    secrets:
+      - POSTGRES_PASSWORD
+    ports:
+      - target: 5432
+        published: 5432
+        protocol: tcp
+        mode: host
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
+
+secrets:
+  POSTGRES_PASSWORD:
+    external: true
