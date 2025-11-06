@@ -2,18 +2,21 @@
 
 #set heading(numbering: "1.1.1")
 #set text(font: "New Computer Modern")
+#show list: set list(indent: 1em)
 
 #let subject = "SUBJECT"
 #let class-name = "CLASS"
 #let teachers = ("TEACHER 1", "TEACHER 2")
 #let students = ("STUDENT NAME 1", "STUDENT NAME 2", "STUDENT NAME 3")
-#let group-name = "GROUPNAME"
 #let group-number = "GROUP NUMBER"
 
 #let topic = "EXERCISE NAME"
 #let exercise-number = "EXERCISE NUMBER"
 #let document_title = "template"
 #let today = datetime.today()
+
+#let exercise-dates = ("DATE 1", "DATE 2")
+#let submission-date = "SUBMISSION DATE"
 
 #set document(title: "Laboratory Protocol")
 #set page(
@@ -51,11 +54,11 @@
 
 
 
-#heading(outlined: false,numbering: none)[#topic]
+#heading(outlined: false,numbering: none)[Laboratory protocol Excercise #exercise-number: #topic]
 #v(13pt)
 #line(length: 100%, stroke: 0.4pt)
 
-Laboratory protocol Excercise #exercise-number: #topic
+Laboratory protocol
 
 #image("images/menheraPhoneHello.png", width: 100%)
 
@@ -63,16 +66,17 @@ Laboratory protocol Excercise #exercise-number: #topic
 Subject: #subject \
 Class: #class-name \
 Names: #students.join(", ") \
-Groupname/Number: #group-name /#group-number \
+Groupnumber: #group-number \
 Supervisor: #teachers.join(", ") \
-Exercise dates: \
-Submission date:
+Exercise dates: #exercise-dates.join(", ") \
+Submission date: #submission-date
 
 #pagebreak()
-#outline()
+#outline(depth: 3)
 
 #pagebreak()
 
+#counter(page).update(1)
 #set page(footer: context [
     #v(12pt)
     #columns(3)[
