@@ -19,40 +19,63 @@
 #let submission-date = "SUBMISSION DATE"
 
 #set document(title: "Laboratory Protocol")
-#set page(
-  paper: "a4",
-  // background: scaffolding(stroke: blue + 1pt),
-  margin: (left: 20mm, right: 20mm, top: 45mm, bottom: 15mm),
-  header-ascent: 20pt,
-  header: context [
-    #stack(dir:ltr, spacing: 1fr,
-        [
-          htl donaustadt \
-          Donaustadtstraße 45 \
-          1220 Wien
+#let make-header(executed-by: none, documented-by: none) = context [
+  #stack(dir:ltr, spacing: 1fr,
+    [
+    htl donaustadt \
+    Donaustadtstraße 45 \
+    1220 Wien
 
-          Abteilung: Informationstechnologie \
-          Schwerpunkt: Netzwerktechnik
-        ],
-        [
-          #image("images/logo.png", width: 35% )
-        ],
-      )
-    #line(length: 100%, stroke: 0.4pt)
+    Abteilung: Informationstechnologie \
+    Schwerpunkt: Netzwerktechnik
   ],
-  footer: context [
-    #v(12pt)
-    #columns(3)[
-    #align(left)[#datetime.display(today, "[month repr:long] [day], [year]")]
+    [
+    #image("images/logo.png", width: 35% )
+  ],
+  )
+
+  #v(5pt)
+  #line(length: 100%, stroke: 0.4pt)
+
+  #if executed-by != none or documented-by != none [
+  #place(bottom + right, dy: 24pt)[ 
+    #set text(size: 8pt)
+    #align(right)[
+      #grid(
+        columns: (auto, auto),
+        column-gutter: 4pt, 
+        row-gutter: 4pt,
+        align: left,
+
+        if executed-by != none { [Executed by:] },
+        if executed-by != none { [#executed-by] },
+
+        if documented-by != none { [Documented by:] },
+        if documented-by != none { [#documented-by] }
+      )
+    ]
+  ]
+]
+]
+
+#let make-footer() = context [
+  #v(12pt)
+  #columns(3)[
+    #align(left)[#datetime.today().display("[month repr:long] [day], [year]")]
     #colbreak()
-    #align(center)[#document_title]
+    #align(center)[Laboratory Protocol]
     #colbreak()
     #align(right)[Page: #counter(page).display("i")]
-    ]
-  ],
+  ]
+]
+
+#set page(
+  paper: "a4",
+  margin: (left: 20mm, right: 20mm, top: 55mm, bottom: 15mm),
+  header-ascent: 20pt,
+  header: make-header(),
+  footer: make-footer(),
 )
-
-
 
 #heading(outlined: false,numbering: none)[Laboratory protocol Excercise #exercise-number: #topic]
 #v(13pt)
@@ -94,6 +117,9 @@ Submission date: #submission-date
 #pagebreak()
 = Complete network topology of the exercise <sec:network-topology> 
 
+#set page(
+  header: make-header(executed-by:  students.at(0),documented-by:  students.at(0)),
+)
 #pagebreak()
 = Exercise Execution <sec:exercise-execution> 
 
@@ -128,6 +154,10 @@ if err != nil {
 ) <fig:figure-example>
 
 Referencing a Figure @fig:figure-example
+
+#set page(
+  header: make-header(),
+)
 
 #pagebreak()
 = References <sec:references>
