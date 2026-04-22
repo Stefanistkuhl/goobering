@@ -19,7 +19,7 @@ all ft_*.c files together so libft dependencies are available:
   cc -Wall -Wextra -Werror -g ft_*.c -o libft_eval && ./libft_eval
 
 Examples:
-  curl -fsSL https://raw.githubusercontent.com/stefanistkuhl/goobering/master/scripts/libft_eval_mains.sh | sh
+  curl -fsSL https://raw.githubusercontent.com/0xveya/goobering/master/scripts/libft_eval_mains.sh | sh
   sh libft_eval_mains.sh --uninstall
 USAGE
 }
