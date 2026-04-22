@@ -80,24 +80,44 @@ cc -Wall -Wextra -Werror -g ft_*.c -o libft_eval && ./libft_eval
 # include <unistd.h>
 
 static int	g_fails;
+static int	g_total;
+static int	g_started;
+
+static void	print_banner(void)
+{
+	if (g_started)
+		return ;
+	g_started = 1;
+	printf("\n========================================\n");
+	printf("libft manual eval: %s\n", __FILE__);
+	printf("========================================\n");
+	printf("Each line shows the case being checked and its result.\n");
+}
 
 static void	check(const char *label, int ok)
 {
+	print_banner();
+	g_total++;
+	printf("\nTest %02d\n", g_total);
+	printf("  check : %s\n", label);
 	if (ok)
-		printf("[OK]   %s\n", label);
+		printf("  result: OK\n");
 	else
 	{
-		printf("[FAIL] %s\n", label);
+		printf("  result: FAIL\n");
 		g_fails++;
 	}
 }
 
 static void	print_result(void)
 {
+	print_banner();
+	printf("\n----------------------------------------\n");
 	if (g_fails == 0)
-		printf("\nResult: PASS\n");
+		printf("Summary: PASS (%d/%d checks passed)\n", g_total, g_total);
 	else
-		printf("\nResult: FAIL (%d)\n", g_fails);
+		printf("Summary: FAIL (%d/%d checks failed)\n", g_fails, g_total);
+	printf("----------------------------------------\n");
 }
 
 EOF
@@ -117,11 +137,11 @@ make_block()
 		cat <<'EOF'
 int	main(void)
 {
-	check("simple positive", ft_atoi("42") == atoi("42"));
-	check("leading whitespace", ft_atoi(" \t\n\r\v\f-123x") == atoi(" \t\n\r\v\f-123x"));
-	check("plus sign", ft_atoi("+17") == atoi("+17"));
-	check("double sign", ft_atoi("--12") == atoi("--12"));
-	check("zero", ft_atoi("0") == 0);
+	check("ft_atoi(\"42\") == atoi(\"42\")", ft_atoi("42") == atoi("42"));
+	check("ft_atoi(whitespace + -123x) matches atoi", ft_atoi(" \t\n\r\v\f-123x") == atoi(" \t\n\r\v\f-123x"));
+	check("ft_atoi(\"+17\") matches atoi", ft_atoi("+17") == atoi("+17"));
+	check("ft_atoi(\"--12\") matches atoi", ft_atoi("--12") == atoi("--12"));
+	check("ft_atoi(\"0\") == 0", ft_atoi("0") == 0);
 	print_result();
 	return (g_fails != 0);
 }
@@ -137,9 +157,9 @@ int	main(void)
 
 	ft_bzero(a + 2, 3);
 	bzero(b + 2, 3);
-	check("partial clear matches bzero", memcmp(a, b, sizeof(a)) == 0);
+	check("ft_bzero(a + 2, 3) matches bzero on same buffer", memcmp(a, b, sizeof(a)) == 0);
 	ft_bzero(a, 0);
-	check("zero length keeps buffer", memcmp(a, b, sizeof(a)) == 0);
+	check("zero-length call leaves buffer unchanged", memcmp(a, b, sizeof(a)) == 0);
 	print_result();
 	return (g_fails != 0);
 }
@@ -155,15 +175,15 @@ int	main(void)
 	int				zeroed;
 
 	p = ft_calloc(8, sizeof(unsigned char));
-	check("allocation returns memory", p != NULL);
+	check("ft_calloc(8, sizeof(unsigned char)) returns memory", p != NULL);
 	zeroed = 1;
 	i = 0;
 	while (p && i < 8)
 		zeroed &= (p[i++] == 0);
-	check("memory is zeroed", zeroed);
+	check("ft_calloc returned bytes are all zero", zeroed);
 	free(p);
 	p = ft_calloc(0, 8);
-	check("zero count does not crash", p != NULL || p == NULL);
+	check("ft_calloc(0, 8) returns safely", p != NULL || p == NULL);
 	free(p);
 	print_result();
 	return (g_fails != 0);
@@ -197,11 +217,11 @@ int	main(void)
 		ok_print &= (!!ft_isprint(c) == !!isprint(c));
 		c++;
 	}
-	check("ft_isalpha range", ok_alpha);
-	check("ft_isdigit range", ok_digit);
-	check("ft_isalnum range", ok_alnum);
-	check("ft_isascii range", ok_ascii);
-	check("ft_isprint range", ok_print);
+	check("ft_isalpha matches isalpha for -1..128", ok_alpha);
+	check("ft_isdigit matches isdigit for -1..128", ok_digit);
+	check("ft_isalnum matches isalnum for -1..128", ok_alnum);
+	check("ft_isascii is true only for 0..127", ok_ascii);
+	check("ft_isprint matches isprint for -1..128", ok_print);
 	print_result();
 	return (g_fails != 0);
 }
@@ -213,9 +233,11 @@ EOF
 static void	check_itoa(int n, const char *want)
 {
 	char	*got;
+	char	label[96];
 
 	got = ft_itoa(n);
-	check(want, got != NULL && strcmp(got, want) == 0);
+	snprintf(label, sizeof(label), "ft_itoa(%d) returns \"%s\"", n, want);
+	check(label, got != NULL && strcmp(got, want) == 0);
 	free(got);
 }
 
@@ -258,19 +280,19 @@ int	main(void)
 	a = ft_lstnew(ft_strdup("one"));
 	b = ft_lstnew(ft_strdup("two"));
 	c = ft_lstnew(ft_strdup("three"));
-	check("ft_lstnew content", a && strcmp(a->content, "one") == 0);
+	check("ft_lstnew stores duplicated content pointer", a && strcmp(a->content, "one") == 0);
 	ft_lstadd_back(&a, b);
 	ft_lstadd_front(&a, c);
-	check("ft_lstsize after add", ft_lstsize(a) == 3);
-	check("ft_lstlast", ft_lstlast(a) == b);
+	check("ft_lstadd_front/back create a 3-node list", ft_lstsize(a) == 3);
+	check("ft_lstlast returns the final node", ft_lstlast(a) == b);
 	ft_lstiter(a, upper_content);
-	check("ft_lstiter touched first", strcmp(c->content, "Three") == 0);
+	check("ft_lstiter applies callback to list content", strcmp(c->content, "Three") == 0);
 	mapped = ft_lstmap(a, dup_content, free);
-	check("ft_lstmap produced list", mapped && ft_lstsize(mapped) == 3);
+	check("ft_lstmap duplicates each node into a new list", mapped && ft_lstsize(mapped) == 3);
 	ft_lstclear(&mapped, free);
-	check("ft_lstclear nulls mapped", mapped == NULL);
+	check("ft_lstclear frees mapped list and sets pointer NULL", mapped == NULL);
 	ft_lstclear(&a, free);
-	check("ft_lstclear nulls original", a == NULL);
+	check("ft_lstclear frees original list and sets pointer NULL", a == NULL);
 	print_result();
 	return (g_fails != 0);
 }
@@ -283,10 +305,10 @@ int	main(void)
 {
 	const char	buf[] = "abc\0def";
 
-	check("find visible byte", ft_memchr(buf, 'c', sizeof(buf)) == memchr(buf, 'c', sizeof(buf)));
-	check("find byte after nul", ft_memchr(buf, 'e', sizeof(buf)) == memchr(buf, 'e', sizeof(buf)));
-	check("missing byte", ft_memchr(buf, 'z', sizeof(buf)) == NULL);
-	check("zero length", ft_memchr(buf, 'a', 0) == NULL);
+	check("ft_memchr finds visible byte 'c'", ft_memchr(buf, 'c', sizeof(buf)) == memchr(buf, 'c', sizeof(buf)));
+	check("ft_memchr finds byte after embedded NUL", ft_memchr(buf, 'e', sizeof(buf)) == memchr(buf, 'e', sizeof(buf)));
+	check("ft_memchr returns NULL for missing byte", ft_memchr(buf, 'z', sizeof(buf)) == NULL);
+	check("ft_memchr with length 0 returns NULL", ft_memchr(buf, 'a', 0) == NULL);
 	print_result();
 	return (g_fails != 0);
 }
@@ -300,9 +322,9 @@ int	main(void)
 	unsigned char	a[] = {0, 1, 2, 200, 0};
 	unsigned char	b[] = {0, 1, 2, 201, 0};
 
-	check("equal prefix", ft_memcmp(a, b, 3) == memcmp(a, b, 3));
-	check("different byte sign", (ft_memcmp(a, b, 5) < 0) == (memcmp(a, b, 5) < 0));
-	check("zero length", ft_memcmp(a, b, 0) == 0);
+	check("comparison equal prefix matches libc", ft_memcmp(a, b, 3) == memcmp(a, b, 3));
+	check("ft_memcmp sign matches memcmp for different byte", (ft_memcmp(a, b, 5) < 0) == (memcmp(a, b, 5) < 0));
+	check("ft_memcmp with length 0 returns 0", ft_memcmp(a, b, 0) == 0);
 	print_result();
 	return (g_fails != 0);
 }
@@ -318,11 +340,11 @@ int	main(void)
 
 	memset(dst, 'x', sizeof(dst));
 	memset(ref, 'x', sizeof(ref));
-	check("return value", ft_memcpy(dst, "hello", 6) == dst);
+	check("function returns destination pointer", ft_memcpy(dst, "hello", 6) == dst);
 	memcpy(ref, "hello", 6);
-	check("copy matches memcpy", memcmp(dst, ref, sizeof(dst)) == 0);
+	check("ft_memcpy copies bytes like memcpy", memcmp(dst, ref, sizeof(dst)) == 0);
 	ft_memcpy(dst, "zz", 0);
-	check("zero length keeps buffer", memcmp(dst, ref, sizeof(dst)) == 0);
+	check("zero-length call leaves buffer unchanged", memcmp(dst, ref, sizeof(dst)) == 0);
 	print_result();
 	return (g_fails != 0);
 }
@@ -336,12 +358,12 @@ int	main(void)
 	char	a[16] = "0123456789";
 	char	b[16] = "0123456789";
 
-	check("return value", ft_memmove(a + 2, a, 8) == a + 2);
+	check("function returns destination pointer", ft_memmove(a + 2, a, 8) == a + 2);
 	memmove(b + 2, b, 8);
-	check("overlap forward", memcmp(a, b, sizeof(a)) == 0);
+	check("ft_memmove handles forward overlap like memmove", memcmp(a, b, sizeof(a)) == 0);
 	ft_memmove(a, a + 2, 4);
 	memmove(b, b + 2, 4);
-	check("overlap backward", memcmp(a, b, sizeof(a)) == 0);
+	check("ft_memmove handles backward overlap like memmove", memcmp(a, b, sizeof(a)) == 0);
 	print_result();
 	return (g_fails != 0);
 }
@@ -357,9 +379,9 @@ int	main(void)
 
 	memset(a, 0, sizeof(a));
 	memset(b, 0, sizeof(b));
-	check("return value", ft_memset(a, 'A', 5) == a);
+	check("function returns destination pointer", ft_memset(a, 'A', 5) == a);
 	memset(b, 'A', 5);
-	check("matches memset", memcmp(a, b, sizeof(a)) == 0);
+	check("ft_memset writes bytes like memset", memcmp(a, b, sizeof(a)) == 0);
 	print_result();
 	return (g_fails != 0);
 }
@@ -381,7 +403,7 @@ int	main(void)
 	ft_putnbr_fd(-2147483648, 1);
 	ft_putchar_fd('\n', 1);
 	printf("<END>\n");
-	check("fd functions ran", 1);
+	check("fd output functions printed between BEGIN/END markers", 1);
 	print_result();
 	return (g_fails != 0);
 }
@@ -407,14 +429,14 @@ int	main(void)
 	char	**v;
 
 	v = ft_split("  alpha beta  gamma ", ' ');
-	check("split allocation", v != NULL);
-	check("word 0", v && v[0] && strcmp(v[0], "alpha") == 0);
-	check("word 1", v && v[1] && strcmp(v[1], "beta") == 0);
-	check("word 2", v && v[2] && strcmp(v[2], "gamma") == 0);
-	check("terminator", v && v[3] == NULL);
+	check("ft_split allocates vector for spaced words", v != NULL);
+	check("ft_split word 0 == alpha", v && v[0] && strcmp(v[0], "alpha") == 0);
+	check("ft_split word 1 == beta", v && v[1] && strcmp(v[1], "beta") == 0);
+	check("ft_split word 2 == gamma", v && v[2] && strcmp(v[2], "gamma") == 0);
+	check("ft_split vector ends with NULL terminator", v && v[3] == NULL);
 	free_split(v);
 	v = ft_split(",,,,", ',');
-	check("only delimiters gives empty vector", v && v[0] == NULL);
+	check("ft_split on only delimiters gives empty vector", v && v[0] == NULL);
 	free_split(v);
 	print_result();
 	return (g_fails != 0);
@@ -429,9 +451,9 @@ int	main(void)
 	const char	*s;
 
 	s = "hello";
-	check("find first l", ft_strchr(s, 'l') == strchr(s, 'l'));
-	check("find nul", ft_strchr(s, '\0') == strchr(s, '\0'));
-	check("missing char", ft_strchr(s, 'z') == NULL);
+	check("ft_strchr finds first 'l' like strchr", ft_strchr(s, 'l') == strchr(s, 'l'));
+	check("string search finds terminating NUL like libc", ft_strchr(s, '\0') == strchr(s, '\0'));
+	check("ft_strchr returns NULL for missing char", ft_strchr(s, 'z') == NULL);
 	print_result();
 	return (g_fails != 0);
 }
@@ -445,9 +467,9 @@ int	main(void)
 	char	*s;
 
 	s = ft_strdup("hello");
-	check("duplicate allocation", s != NULL);
-	check("duplicate content", s && strcmp(s, "hello") == 0);
-	check("different pointer", s && s != (char *)"hello");
+	check("ft_strdup returns allocated duplicate", s != NULL);
+	check("ft_strdup content equals source string", s && strcmp(s, "hello") == 0);
+	check("ft_strdup result pointer differs from string literal", s && s != (char *)"hello");
 	free(s);
 	print_result();
 	return (g_fails != 0);
@@ -467,7 +489,7 @@ int	main(void)
 	char	s[] = "abcd";
 
 	ft_striteri(s, iter_cb);
-	check("callback changed chars", strcmp(s, "0123") == 0);
+	check("ft_striteri callback turns abcd into 0123", strcmp(s, "0123") == 0);
 	print_result();
 	return (g_fails != 0);
 }
@@ -481,8 +503,8 @@ int	main(void)
 	char	*s;
 
 	s = ft_strjoin("hello", " world");
-	check("join allocation", s != NULL);
-	check("join content", s && strcmp(s, "hello world") == 0);
+	check("ft_strjoin allocates joined string", s != NULL);
+	check("ft_strjoin result == hello world", s && strcmp(s, "hello world") == 0);
 	free(s);
 	print_result();
 	return (g_fails != 0);
@@ -498,12 +520,12 @@ int	main(void)
 	size_t	ret;
 
 	ret = ft_strlcat(dst, "def", sizeof(dst));
-	check("return length", ret == 6);
-	check("concat content", strcmp(dst, "abcdef") == 0);
+	check("ft_strlcat returns full attempted length", ret == 6);
+	check("ft_strlcat appends def into abcdef", strcmp(dst, "abcdef") == 0);
 	strcpy(dst, "abc");
 	ret = ft_strlcat(dst, "def", 4);
-	check("truncated return length", ret == 6);
-	check("truncated content", strcmp(dst, "abc") == 0);
+	check("ft_strlcat truncated call still returns full length", ret == 6);
+	check("ft_strlcat truncates without overflow", strcmp(dst, "abc") == 0);
 	print_result();
 	return (g_fails != 0);
 }
@@ -519,11 +541,11 @@ int	main(void)
 
 	memset(dst, 'x', sizeof(dst));
 	ret = ft_strlcpy(dst, "hello", sizeof(dst));
-	check("return source length", ret == 5);
-	check("copy content", strcmp(dst, "hello") == 0);
+	check("ft_strlcpy returns source length", ret == 5);
+	check("ft_strlcpy copies hello into destination", strcmp(dst, "hello") == 0);
 	ret = ft_strlcpy(dst, "abcdef", 4);
-	check("truncate return source length", ret == 6);
-	check("truncate content", strcmp(dst, "abc") == 0);
+	check("ft_strlcpy truncated call returns source length", ret == 6);
+	check("ft_strlcpy truncates and NUL-terminates", strcmp(dst, "abc") == 0);
 	print_result();
 	return (g_fails != 0);
 }
@@ -534,9 +556,9 @@ EOF
 		cat <<'EOF'
 int	main(void)
 {
-	check("empty", ft_strlen("") == strlen(""));
-	check("normal", ft_strlen("hello") == strlen("hello"));
-	check("with spaces", ft_strlen("a b c") == strlen("a b c"));
+	check("ft_strlen(\"\") matches strlen", ft_strlen("") == strlen(""));
+	check("ft_strlen(\"hello\") matches strlen", ft_strlen("hello") == strlen("hello"));
+	check("ft_strlen(\"a b c\") matches strlen", ft_strlen("a b c") == strlen("a b c"));
 	print_result();
 	return (g_fails != 0);
 }
@@ -555,8 +577,8 @@ int	main(void)
 	char	*s;
 
 	s = ft_strmapi("abcd", map_cb);
-	check("mapped allocation", s != NULL);
-	check("mapped content", s && strcmp(s, "aceg") == 0);
+	check("ft_strmapi allocates mapped string", s != NULL);
+	check("ft_strmapi maps abcd into aceg", s && strcmp(s, "aceg") == 0);
 	free(s);
 	print_result();
 	return (g_fails != 0);
@@ -568,9 +590,9 @@ EOF
 		cat <<'EOF'
 int	main(void)
 {
-	check("equal prefix", ft_strncmp("abc", "abd", 2) == strncmp("abc", "abd", 2));
-	check("different sign", (ft_strncmp("abc", "abd", 3) < 0) == (strncmp("abc", "abd", 3) < 0));
-	check("zero length", ft_strncmp("abc", "xyz", 0) == 0);
+	check("comparison equal prefix matches libc", ft_strncmp("abc", "abd", 2) == strncmp("abc", "abd", 2));
+	check("ft_strncmp sign matches strncmp", (ft_strncmp("abc", "abd", 3) < 0) == (strncmp("abc", "abd", 3) < 0));
+	check("ft_strncmp with n = 0 returns 0", ft_strncmp("abc", "xyz", 0) == 0);
 	print_result();
 	return (g_fails != 0);
 }
@@ -581,10 +603,10 @@ EOF
 		cat <<'EOF'
 int	main(void)
 {
-	check("find needle", ft_strnstr("hello world", "world", 11) != NULL
+	check("ft_strnstr finds world inside hello world", ft_strnstr("hello world", "world", 11) != NULL
 		&& strcmp(ft_strnstr("hello world", "world", 11), "world") == 0);
-	check("limited miss", ft_strnstr("hello world", "world", 5) == NULL);
-	check("empty needle", ft_strnstr("abc", "", 3) != NULL
+	check("ft_strnstr respects max length and misses world", ft_strnstr("hello world", "world", 5) == NULL);
+	check("ft_strnstr empty needle returns haystack", ft_strnstr("abc", "", 3) != NULL
 		&& strcmp(ft_strnstr("abc", "", 3), "abc") == 0);
 	print_result();
 	return (g_fails != 0);
@@ -599,9 +621,9 @@ int	main(void)
 	const char	*s;
 
 	s = "banana";
-	check("last a", ft_strrchr(s, 'a') == strrchr(s, 'a'));
-	check("find nul", ft_strrchr(s, '\0') == strrchr(s, '\0'));
-	check("missing", ft_strrchr(s, 'z') == NULL);
+	check("ft_strrchr finds last 'a' like strrchr", ft_strrchr(s, 'a') == strrchr(s, 'a'));
+	check("string search finds terminating NUL like libc", ft_strrchr(s, '\0') == strrchr(s, '\0'));
+	check("ft_strrchr returns NULL for missing char", ft_strrchr(s, 'z') == NULL);
 	print_result();
 	return (g_fails != 0);
 }
@@ -615,11 +637,11 @@ int	main(void)
 	char	*s;
 
 	s = ft_strtrim(" \t hello \t ", " \t");
-	check("trim allocation", s != NULL);
-	check("trim content", s && strcmp(s, "hello") == 0);
+	check("ft_strtrim allocates trimmed string", s != NULL);
+	check("ft_strtrim removes spaces and tabs around hello", s && strcmp(s, "hello") == 0);
 	free(s);
 	s = ft_strtrim("xxxx", "x");
-	check("trim all", s && strcmp(s, "") == 0);
+	check("ft_strtrim trimming all chars returns empty string", s && strcmp(s, "") == 0);
 	free(s);
 	print_result();
 	return (g_fails != 0);
@@ -634,10 +656,10 @@ int	main(void)
 	char	*s;
 
 	s = ft_substr("hello", 1, 3);
-	check("middle substring", s && strcmp(s, "ell") == 0);
+	check("ft_substr(hello, 1, 3) == ell", s && strcmp(s, "ell") == 0);
 	free(s);
 	s = ft_substr("hello", 42, 3);
-	check("start past end", s && strcmp(s, "") == 0);
+	check("ft_substr start past end returns empty string", s && strcmp(s, "") == 0);
 	free(s);
 	print_result();
 	return (g_fails != 0);
@@ -662,8 +684,8 @@ int	main(void)
 		ok_lower &= (ft_tolower(c) == tolower(c));
 		c++;
 	}
-	check("toupper range", ok_upper);
-	check("tolower range", ok_lower);
+	check("ft_toupper matches toupper for -1..128", ok_upper);
+	check("ft_tolower matches tolower for -1..128", ok_lower);
 	print_result();
 	return (g_fails != 0);
 }
